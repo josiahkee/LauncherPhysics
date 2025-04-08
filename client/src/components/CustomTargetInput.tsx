@@ -106,11 +106,14 @@ export default function CustomTargetInput({
           }}
         ></div>
         
-        {/* Starting position marker */}
+        {/* Launcher position marker - 100cm away from quadrant */}
         <div 
           className="absolute w-4 h-4 rounded-full bg-blue-500 transform -translate-x-1/2 -translate-y-1/2 shadow-md"
-          style={{ left: 0, top: '50%' }}
+          style={{ left: '-12%', top: '50%' }}
         ></div>
+        <div className="absolute text-[10px] text-blue-600 font-medium" style={{ left: '-20%', top: '55%' }}>
+          Launcher
+        </div>
       </div>
       
       <div className="mt-2 text-xs text-slate-500 text-center">

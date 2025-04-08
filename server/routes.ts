@@ -76,12 +76,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let targetY: number | undefined;
 
       if (input.customTargetX !== undefined && input.customTargetY !== undefined) {
-        // Calculate distance from origin (0,0) to the target point
-        const distanceX = input.customTargetX;
-        const distanceY = input.customTargetY;
+        // Calculate distance from launcher to the target point
+        // Launcher is 100cm away from the quadrant
+        const distanceX = input.customTargetX + 100; // Add 100cm for launcher distance
+        const distanceY = Math.abs(input.customTargetY - 100); // Distance from center line
         
-        // Get the Euclidean distance
-        const euclideanDistance = Math.sqrt(distanceX * distanceX + distanceY * distanceY) / 100; // Convert to meters
+        // Get the Euclidean distance and convert to meters
+        const euclideanDistance = Math.sqrt(distanceX * distanceX + distanceY * distanceY) / 100;
         
         targetX = input.customTargetX;
         targetY = input.customTargetY;
@@ -140,7 +141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           [targetX, targetY] = coordinates;
           
           // Calculate distance for display purposes
-          const distanceX = targetX;
+          const distanceX = targetX + 100; // Add 100cm for launcher distance
           const distanceY = Math.abs(targetY - 100); // Distance from center line
           targetDistance = Math.sqrt(distanceX * distanceX + distanceY * distanceY) / 100; // Convert to meters
         } else {

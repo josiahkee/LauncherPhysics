@@ -9,7 +9,7 @@ import SpringProperties from "@/components/SpringProperties";
 import ResultDisplay from "@/components/ResultDisplay";
 import SavedResults from "@/components/SavedResults";
 import TrajectoryVisualization from "@/components/TrajectoryVisualization";
-import { CalculateInput, CalculationResult, InsertCalculation } from "@shared/schema";
+import { CalculateInput, CalculationResult, InsertCalculation, Calculation } from "@shared/schema";
 
 export default function Home() {
   const { toast } = useToast();
@@ -17,7 +17,6 @@ export default function Home() {
   // Basic states
   const [angleSetting, setAngleSetting] = useState<string>("acute");
   const [targetType, setTargetType] = useState<string>("start-line");
-  const [launchAngle, setLaunchAngle] = useState<number>(45);
   
   // Custom target states
   const [useCustomTarget, setUseCustomTarget] = useState<boolean>(false);
@@ -27,8 +26,9 @@ export default function Home() {
   const [calculationResult, setCalculationResult] = useState<CalculationResult | null>(null);
   
   // Fetch saved calculations
-  const { data: savedCalculations = [], refetch: refetchCalculations } = useQuery({
+  const { data: savedCalculations = [], refetch: refetchCalculations } = useQuery<Calculation[]>({
     queryKey: ['/api/calculations'],
+    select: (data) => data as Calculation[]
   });
   
   // Calculate spring contraction
@@ -72,9 +72,12 @@ export default function Home() {
   });
   
   const handleCalculate = () => {
+    // Set default launch angle based on angle setting
+    const defaultLaunchAngle = angleSetting === 'acute' ? 65 : 35;
+    
     const input: CalculateInput = {
       angleSetting,
-      launchAngle,
+      launchAngle: defaultLaunchAngle,
       ...(useCustomTarget 
         ? { customTargetX: targetX, customTargetY: targetY } 
         : { targetType }
@@ -92,7 +95,7 @@ export default function Home() {
       targetType: useCustomTarget ? 'custom' : targetType,
       targetDistance: calculationResult.targetDistance,
       contractionDistance: calculationResult.contractionDistance,
-      launchAngle,
+      launchAngle: angleSetting === 'acute' ? 65 : 35, // Default angle based on setting
       ...(useCustomTarget && {
         targetX,
         targetY,
@@ -113,6 +116,9 @@ export default function Home() {
     ? Math.sqrt(targetX * targetX + targetY * targetY) / 100
     : calculationResult?.targetDistance || 1.0;
   
+  // Default launch angle based on setting - for visualization
+  const defaultLaunchAngle = angleSetting === 'acute' ? 65 : 35;
+  
   return (
     <div className="bg-slate-100 min-h-screen font-sans text-slate-800">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -128,7 +134,11 @@ export default function Home() {
               
               <AngleSettingSelector 
                 angleSetting={angleSetting}
-                onChange={setAngleSetting}
+                onChange={(value) => {
+                  setAngleSetting(value);
+                  // Reset target type when angle setting changes
+                  setTargetType(value === 'acute' ? 'start-line' : 'front-line');
+                }}
               />
               
               <TargetSelector 
@@ -147,10 +157,7 @@ export default function Home() {
                 onChangeY={setTargetY}
               />
               
-              <SpringProperties 
-                launchAngle={launchAngle}
-                onLaunchAngleChange={setLaunchAngle}
-              />
+              <SpringProperties />
               
               <div className="mt-6">
                 <button 
@@ -170,7 +177,7 @@ export default function Home() {
             
             <TrajectoryVisualization 
               targetDistance={estimatedTargetDistance}
-              launchAngle={launchAngle}
+              launchAngle={defaultLaunchAngle}
             />
           </div>
           
