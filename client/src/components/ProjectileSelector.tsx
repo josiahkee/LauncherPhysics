@@ -29,10 +29,7 @@ export default function AngleSettingSelector({ angleSetting, onChange }: AngleSe
           Obtuse Angle
         </button>
       </div>
-      <div className="mt-2 text-xs text-slate-500">
-        <p>Acute angle: Steeper launch angle, good for shorter distances. Based on experimental data using 12-15cm contraction.</p>
-        <p>Obtuse angle: Gentler launch angle, better for longer distances. Based on experimental data using 9.5-15cm contraction.</p>
-      </div>
+
     </div>
   );
 }

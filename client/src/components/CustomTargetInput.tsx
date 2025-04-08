@@ -117,10 +117,6 @@ export default function CustomTargetInput({
         </div>
       </div>
       
-      <div className="mt-2 text-sm text-blue-800 font-semibold text-center">
-        Launcher is positioned to the LEFT of the grid, facing right
-      </div>
-      
       <div className="mt-2 text-xs text-slate-500 text-center">
         Click anywhere on the grid to set target position, or use the input fields above.
       </div>
