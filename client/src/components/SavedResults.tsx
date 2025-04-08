@@ -23,21 +23,32 @@ export default function SavedResults({ calculations }: SavedResultsProps) {
         {calculations.map((calculation) => {
           // Format target name for display
           const formatTargetName = (targetType: string) => {
-            const formats: Record<string, string> = {
-              'front': 'Front',
-              'frontcorner': 'Front Corner',
-              'middleline': 'Middle Line',
-              'lastline': 'Last Line',
-              'backcorner': 'Back Corner'
-            };
-            return formats[targetType] || targetType;
+            return targetType.split('-').map(word => 
+              word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+          };
+          
+          // Format the angle setting
+          const formatAngleSetting = (setting: string) => {
+            return setting === 'acute' ? 'Acute Angle' : 
+                   setting === 'obtuse' ? 'Obtuse Angle' : 
+                   setting;
+          };
+          
+          // Get position display
+          const getPositionDisplay = () => {
+            if (calculation.targetX !== undefined && calculation.targetY !== undefined) {
+              return `X: ${calculation.targetX}, Y: ${calculation.targetY}`;
+            } else {
+              return formatTargetName(calculation.targetType);
+            }
           };
           
           return (
             <div key={calculation.id} className="bg-slate-50 p-3 rounded-md border border-slate-200 flex justify-between">
               <div>
                 <div className="text-sm font-medium">
-                  {calculation.projectileType} - {formatTargetName(calculation.targetType)}
+                  {formatAngleSetting(calculation.angleSetting)} - {getPositionDisplay()}
                 </div>
                 <div className="text-xs text-slate-500">
                   {calculation.targetDistance.toFixed(1)}m distance

@@ -1,59 +1,76 @@
+import { calculateTrajectory, TrajectoryPoint } from "../utils/calculations";
+import { useEffect, useState } from "react";
+
 interface TrajectoryVisualizationProps {
   targetDistance: number;
   launchAngle: number;
 }
 
 export default function TrajectoryVisualization({ targetDistance, launchAngle }: TrajectoryVisualizationProps) {
-  // Calculate the path based on the target distance and launch angle
-  const generateTrajectoryPath = () => {
-    // Normalized for SVG viewbox
-    const maxHeight = 50; // Maximum height of trajectory in SVG coordinates
-    const width = 100; // Width of SVG
-
-    // Calculate trajectory path using projectile motion equations
-    // For a parabola, we can use a quadratic bezier curve
-    const angleRad = launchAngle * (Math.PI / 180);
-    
-    // Estimate height of trajectory based on angle and distance
-    // This is a simplified approximation
-    const peakHeight = Math.min(maxHeight, Math.sin(angleRad) * maxHeight);
-    
-    // For a quadratic bezier curve, we need a control point
-    const controlX = width / 2;
-    const controlY = 100 - peakHeight; // SVG y-axis is inverted
-    
-    return `M0,100 Q${controlX},${controlY} ${width},100`;
-  };
+  const [trajectoryPoints, setTrajectoryPoints] = useState<TrajectoryPoint[]>([]);
+  
+  useEffect(() => {
+    // Only calculate when we have valid values
+    if (targetDistance > 0 && launchAngle >= 0) {
+      // Convert targetDistance from meters to centimeters for visualization
+      const targetDistanceCm = targetDistance * 100;
+      
+      // Fixed values for visualization
+      const mass = 50; // grams
+      const springConstant = 30; // N/m
+      
+      const points = calculateTrajectory(targetDistanceCm, launchAngle, springConstant, mass);
+      setTrajectoryPoints(points);
+    }
+  }, [targetDistance, launchAngle]);
+  
+  if (trajectoryPoints.length === 0) {
+    return null;
+  }
+  
+  // Find the maximum height for scaling
+  const maxHeight = Math.max(...trajectoryPoints.map(point => point.y));
+  // Use targetDistance as max X (converted to cm)
+  const maxDistance = targetDistance * 100;
   
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold mb-4">Trajectory Preview</h2>
-      <div className="h-[200px] bg-slate-50 rounded-md border border-slate-200 relative overflow-hidden">
-        {/* Ground line */}
-        <div className="absolute bottom-0 left-0 w-full h-px bg-slate-300"></div>
+    <div className="mt-6 mb-6">
+      <h3 className="text-lg font-medium text-slate-800 mb-2">Trajectory Visualization</h3>
+      <div 
+        className="relative border border-slate-300 rounded-md overflow-hidden bg-slate-50"
+        style={{ height: "150px" }}
+      >
+        {/* Axes */}
+        <div className="absolute bottom-0 left-0 w-full h-px bg-slate-400"></div>
+        <div className="absolute bottom-0 left-0 w-px h-full bg-slate-400"></div>
         
-        {/* Launch point */}
-        <div className="absolute bottom-0 left-6 w-2 h-2 bg-primary-600 rounded-full"></div>
+        {/* Target marker */}
+        <div 
+          className="absolute bottom-0 w-px h-8 bg-red-500"
+          style={{ left: `${(targetDistance * 100 / maxDistance) * 100}%` }}
+        ></div>
         
         {/* Trajectory path */}
-        <svg className="absolute bottom-0 left-6 w-[calc(100%-4rem)] h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <svg 
+          className="absolute bottom-0 left-0 w-full h-full" 
+          viewBox={`0 0 ${maxDistance} ${maxHeight * 1.1}`}
+          preserveAspectRatio="none"
+        >
           <path
-            d={generateTrajectoryPath()}
-            stroke="rgba(37, 99, 235, 0.5)"
-            strokeWidth="2"
+            d={`M 0,0 ${trajectoryPoints.map(point => `L ${point.x},${maxHeight - point.y}`).join(' ')}`}
             fill="none"
-            strokeDasharray="4 2"
+            stroke="blue"
+            strokeWidth="2"
           />
         </svg>
         
-        {/* Target marker */}
-        <div className="absolute bottom-0 right-10 flex flex-col items-center">
-          <div className="w-0.5 h-16 bg-amber-500"></div>
-          <div className="text-xs text-slate-500 mt-1">Target</div>
+        {/* Label for axes */}
+        <div className="absolute bottom-1 right-1 text-xs text-slate-500">
+          {targetDistance.toFixed(1)}m
         </div>
-      </div>
-      <div className="mt-3 text-sm text-slate-500 text-center">
-        This simplified visualization represents the approximate trajectory path.
+        <div className="absolute top-1 left-1 text-xs text-slate-500">
+          Height
+        </div>
       </div>
     </div>
   );

@@ -20,14 +20,13 @@ export type User = typeof users.$inferSelect;
 // Saved calculations table
 export const calculations = pgTable("calculations", {
   id: serial("id").primaryKey(),
-  projectileType: text("projectile_type").notNull(),
+  angleSetting: text("angle_setting").notNull(),
   targetType: text("target_type").notNull(),
   targetDistance: doublePrecision("target_distance").notNull(),
+  targetX: doublePrecision("target_x"),
+  targetY: doublePrecision("target_y"),
   contractionDistance: doublePrecision("contraction_distance").notNull(),
-  springConstant: doublePrecision("spring_constant").notNull(),
   launchAngle: doublePrecision("launch_angle").notNull(),
-  projectileWeight: doublePrecision("projectile_weight"),
-  projectileDiameter: doublePrecision("projectile_diameter"),
   timestamp: doublePrecision("timestamp").notNull(),
 });
 
@@ -40,13 +39,11 @@ export type Calculation = typeof calculations.$inferSelect;
 
 // Input schema for calculating spring contraction
 export const calculateInputSchema = z.object({
-  projectileType: z.string(),
+  angleSetting: z.string(),
   targetType: z.string().optional(),
-  customDistance: z.number().optional(),
-  springConstant: z.number().positive(),
+  customTargetX: z.number().min(0).max(200).optional(),
+  customTargetY: z.number().min(0).max(200).optional(),
   launchAngle: z.number().min(0).max(90),
-  projectileWeight: z.number().positive().optional(),
-  projectileDiameter: z.number().positive().optional(),
 });
 
 export type CalculateInput = z.infer<typeof calculateInputSchema>;
@@ -55,8 +52,10 @@ export type CalculateInput = z.infer<typeof calculateInputSchema>;
 export const calculationResultSchema = z.object({
   contractionDistance: z.number(),
   targetDistance: z.number(),
-  projectileType: z.string(),
+  angleSetting: z.string(),
   targetType: z.string().optional(),
+  targetX: z.number().optional(),
+  targetY: z.number().optional(),
 });
 
 export type CalculationResult = z.infer<typeof calculationResultSchema>;

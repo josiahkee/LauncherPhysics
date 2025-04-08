@@ -2,9 +2,8 @@ import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import ProjectileSelector from "@/components/ProjectileSelector";
+import AngleSettingSelector from "@/components/ProjectileSelector"; // Using the renamed component
 import TargetSelector from "@/components/TargetSelector";
-import CustomProjectileInputs from "@/components/CustomProjectileInputs";
 import CustomTargetInput from "@/components/CustomTargetInput";
 import SpringProperties from "@/components/SpringProperties";
 import ResultDisplay from "@/components/ResultDisplay";
@@ -15,13 +14,15 @@ import { CalculateInput, CalculationResult, InsertCalculation } from "@shared/sc
 export default function Home() {
   const { toast } = useToast();
   
-  const [projectileType, setProjectileType] = useState<string>("first-yellow");
-  const [targetType, setTargetType] = useState<string>("front");
-  const [customDistance, setCustomDistance] = useState<number>(5.0);
-  const [springConstant, setSpringConstant] = useState<number>(100);
+  // Basic states
+  const [angleSetting, setAngleSetting] = useState<string>("acute");
+  const [targetType, setTargetType] = useState<string>("start-line");
   const [launchAngle, setLaunchAngle] = useState<number>(45);
-  const [projectileWeight, setProjectileWeight] = useState<number>(50);
-  const [projectileDiameter, setProjectileDiameter] = useState<number>(30);
+  
+  // Custom target states
+  const [useCustomTarget, setUseCustomTarget] = useState<boolean>(false);
+  const [targetX, setTargetX] = useState<number>(100);
+  const [targetY, setTargetY] = useState<number>(100);
   
   const [calculationResult, setCalculationResult] = useState<CalculationResult | null>(null);
   
@@ -72,15 +73,12 @@ export default function Home() {
   
   const handleCalculate = () => {
     const input: CalculateInput = {
-      projectileType,
-      targetType,
-      springConstant,
+      angleSetting,
       launchAngle,
-      ...(projectileType === 'custom' && {
-        customDistance,
-        projectileWeight,
-        projectileDiameter,
-      }),
+      ...(useCustomTarget 
+        ? { customTargetX: targetX, customTargetY: targetY } 
+        : { targetType }
+      ),
     };
     
     calculateMutation.mutate(input);
@@ -90,15 +88,14 @@ export default function Home() {
     if (!calculationResult) return;
     
     const calculation: InsertCalculation = {
-      projectileType,
-      targetType,
+      angleSetting,
+      targetType: useCustomTarget ? 'custom' : targetType,
       targetDistance: calculationResult.targetDistance,
       contractionDistance: calculationResult.contractionDistance,
-      springConstant,
       launchAngle,
-      ...(projectileType === 'custom' && {
-        projectileWeight,
-        projectileDiameter,
+      ...(useCustomTarget && {
+        targetX,
+        targetY,
       }),
       timestamp: Date.now(),
     };
@@ -106,15 +103,15 @@ export default function Home() {
     saveMutation.mutate(calculation);
   };
   
-  // Use the first result as initial calculation
-  if (!calculationResult && projectileType === 'first-yellow') {
-    setCalculationResult({
-      contractionDistance: 12.0,
-      targetDistance: 4.5,
-      projectileType: 'First Yellow',
-      targetType: 'front'
-    });
+  // Use the first result as initial calculation (optional)
+  if (!calculationResult && !calculateMutation.isPending) {
+    handleCalculate();
   }
+  
+  // Calculate estimated target distance for trajectory visualization
+  const estimatedTargetDistance = useCustomTarget
+    ? Math.sqrt(targetX * targetX + targetY * targetY) / 100
+    : calculationResult?.targetDistance || 1.0;
   
   return (
     <div className="bg-slate-100 min-h-screen font-sans text-slate-800">
@@ -129,35 +126,29 @@ export default function Home() {
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <h2 className="text-xl font-semibold mb-4">Launch Parameters</h2>
               
-              <ProjectileSelector 
-                projectileType={projectileType}
-                onChange={setProjectileType}
-              />
-              
-              <CustomProjectileInputs 
-                visible={projectileType === 'custom'}
-                projectileWeight={projectileWeight}
-                projectileDiameter={projectileDiameter}
-                onWeightChange={setProjectileWeight}
-                onDiameterChange={setProjectileDiameter}
+              <AngleSettingSelector 
+                angleSetting={angleSetting}
+                onChange={setAngleSetting}
               />
               
               <TargetSelector 
-                projectileType={projectileType}
+                angleSetting={angleSetting}
                 targetType={targetType}
                 onChange={setTargetType}
+                onCustomTarget={setUseCustomTarget}
+                useCustomTarget={useCustomTarget}
               />
               
               <CustomTargetInput 
-                visible={projectileType === 'custom'}
-                value={customDistance}
-                onChange={setCustomDistance}
+                visible={useCustomTarget}
+                targetX={targetX}
+                targetY={targetY}
+                onChangeX={setTargetX}
+                onChangeY={setTargetY}
               />
               
               <SpringProperties 
-                springConstant={springConstant}
                 launchAngle={launchAngle}
-                onSpringConstantChange={setSpringConstant}
                 onLaunchAngleChange={setLaunchAngle}
               />
               
@@ -176,6 +167,11 @@ export default function Home() {
                 </button>
               </div>
             </div>
+            
+            <TrajectoryVisualization 
+              targetDistance={estimatedTargetDistance}
+              launchAngle={launchAngle}
+            />
           </div>
           
           <div className="col-span-1">
@@ -187,10 +183,6 @@ export default function Home() {
                 isLoading={calculateMutation.isPending}
               />
               
-              <SavedResults 
-                calculations={savedCalculations}
-              />
-              
               <button 
                 className="mt-4 w-full py-2 px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium rounded-md shadow-sm transition"
                 onClick={handleSaveCalculation}
@@ -200,9 +192,8 @@ export default function Home() {
               </button>
             </div>
             
-            <TrajectoryVisualization 
-              targetDistance={calculationResult?.targetDistance || 0}
-              launchAngle={launchAngle}
+            <SavedResults 
+              calculations={savedCalculations}
             />
           </div>
         </main>

@@ -37,72 +37,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const input = calculateInputSchema.parse(req.body);
       
-      // Predefined target distances
-      const targetDistances: Record<string, Record<string, number>> = {
-        'first-yellow': {
-          'front': 12.0,
-          'frontcorner': 13.0
+      // Pre-defined target configurations and contraction distances based on user's requirements
+      const contractionDistances: Record<string, Record<string, number>> = {
+        'acute': {
+          'start-line': 12.0,
+          'front-left-corner': 13.0,
+          'mid-line': 14.0,
+          'far-side': 15.0
         },
-        'second-yellow': {
-          'middleline': 9.5,
-          'lastline': 15.0,
-          'backcorner': 15.5
+        'obtuse': {
+          'front-line': 9.5,
+          'back-line': 15.0,
+          'center': 14.0,
+          'side': 15.0
         }
       };
 
-      // Predefined distances mapping
-      const distanceMapping: Record<string, Record<string, number>> = {
-        'first-yellow': {
-          'front': 4.5,
-          'frontcorner': 5.2
+      // Approximate coordinates for each target type in cm (on a 200x200 grid)
+      const targetCoordinates: Record<string, Record<string, [number, number]>> = {
+        'acute': {
+          'start-line': [0, 100],         // Front-center
+          'front-left-corner': [0, 0],    // Front-left corner
+          'mid-line': [100, 100],         // Middle of grid
+          'far-side': [100, 0]            // Mid-point on the left side
         },
-        'second-yellow': {
-          'middleline': 3.2,
-          'lastline': 5.8,
-          'backcorner': 6.0
+        'obtuse': {
+          'front-line': [0, 100],         // Front-center
+          'back-line': [200, 100],        // Back-center
+          'center': [100, 100],           // Center of grid
+          'side': [100, 0]                // Mid-point on the left side
         }
       };
 
       let contractionDistance: number;
       let targetDistance: number;
       let targetType = input.targetType || '';
+      let targetX: number | undefined;
+      let targetY: number | undefined;
 
-      if (input.projectileType === 'custom' && input.customDistance !== undefined) {
-        // Custom calculation formula based on physics principles
-        // For custom projectiles, we use a simplified model based on the provided inputs
-        const mass = input.projectileWeight || 50; // in grams
-        const springConstant = input.springConstant; // N/m
-        const angle = input.launchAngle * (Math.PI / 180); // convert to radians
-        const g = 9.81; // gravity in m/s^2
-
-        // Simplified calculation (this would be more complex in a real physics simulation)
-        targetDistance = input.customDistance;
+      if (input.customTargetX !== undefined && input.customTargetY !== undefined) {
+        // Calculate distance from origin (0,0) to the target point
+        const distanceX = input.customTargetX;
+        const distanceY = input.customTargetY;
         
-        // Using the projectile motion formula and Hooke's law (F = kx)
-        // v² = springConstant * x² / mass
-        // Range = (v² * sin(2θ)) / g
-        // Solving for x (spring contraction)
-        contractionDistance = Math.sqrt((mass * g * targetDistance) / 
-                                       (springConstant * Math.sin(2 * angle))) * 100; // convert to cm
+        // Get the Euclidean distance
+        const euclideanDistance = Math.sqrt(distanceX * distanceX + distanceY * distanceY) / 100; // Convert to meters
+        
+        targetX = input.customTargetX;
+        targetY = input.customTargetY;
+        targetDistance = euclideanDistance;
+        
+        // Calculate contraction based on angle setting and position
+        if (input.angleSetting === 'acute') {
+          // For acute angle setting:
+          // Base: 12cm for 0 distance
+          // +1cm per 100cm of X distance
+          // +0.5cm if at a side position
+          
+          contractionDistance = 12.0; // Base contraction
+          
+          if (distanceX > 0) {
+            // Add 1cm for each 100cm in X direction (depth)
+            contractionDistance += (distanceX / 100) * 1.0;
+          }
+          
+          // If closer to edges, add additional contraction
+          if (distanceY < 50 || distanceY > 150) {
+            contractionDistance += 0.5;
+          }
+          
+          // Cap at max distance
+          contractionDistance = Math.min(contractionDistance, 15.0);
+        } else {
+          // For obtuse angle setting:
+          // Base: 9.5cm for front position
+          // +5.5cm for full 200cm in X direction
+          // +1cm if at a side position
+          
+          contractionDistance = 9.5; // Base contraction
+          
+          if (distanceX > 0) {
+            // Linear scale between 9.5 and 15cm based on X distance
+            const depthFactor = distanceX / 200;
+            contractionDistance += depthFactor * 5.5;
+          }
+          
+          // If closer to sides, add additional contraction
+          if (distanceY < 50 || distanceY > 150) {
+            contractionDistance += 1.0;
+          }
+        }
         
         // Round to 1 decimal place
         contractionDistance = Math.round(contractionDistance * 10) / 10;
       } else {
-        // Use predefined values for known projectiles
-        contractionDistance = targetDistances[input.projectileType]?.[targetType] || 0;
-        targetDistance = distanceMapping[input.projectileType]?.[targetType] || 0;
+        // Use predefined values when not using coordinates
+        contractionDistance = contractionDistances[input.angleSetting]?.[targetType] || 0;
+        
+        // Set target coordinates if available
+        const coordinates = targetCoordinates[input.angleSetting]?.[targetType];
+        if (coordinates) {
+          [targetX, targetY] = coordinates;
+          
+          // Calculate distance for display purposes
+          const distanceX = targetX;
+          const distanceY = Math.abs(targetY - 100); // Distance from center line
+          targetDistance = Math.sqrt(distanceX * distanceX + distanceY * distanceY) / 100; // Convert to meters
+        } else {
+          targetDistance = 0;
+        }
       }
-
-      const projectileTypeDisplay = 
-        input.projectileType === 'first-yellow' ? 'First Yellow' :
-        input.projectileType === 'second-yellow' ? 'Second Yellow' : 
-        'Custom';
 
       res.json({
         contractionDistance,
         targetDistance,
-        projectileType: projectileTypeDisplay,
-        targetType
+        angleSetting: input.angleSetting,
+        targetType,
+        targetX,
+        targetY
       });
     } catch (error) {
       if (error instanceof ZodError) {

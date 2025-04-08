@@ -1,43 +1,37 @@
-interface ProjectileSelectorProps {
-  projectileType: string;
+interface AngleSettingSelectorProps {
+  angleSetting: string;
   onChange: (type: string) => void;
 }
 
-export default function ProjectileSelector({ projectileType, onChange }: ProjectileSelectorProps) {
+export default function AngleSettingSelector({ angleSetting, onChange }: AngleSettingSelectorProps) {
   return (
     <div className="mb-6">
-      <label className="block text-sm font-medium text-slate-700 mb-2">Projectile Type</label>
+      <label className="block text-sm font-medium text-slate-700 mb-2">Angle Setting</label>
       <div className="flex flex-wrap gap-3">
         <button 
           className={`px-4 py-2 rounded-md ${
-            projectileType === 'first-yellow' 
-              ? 'bg-amber-400 text-white' 
+            angleSetting === 'acute' 
+              ? 'bg-primary-600 text-white' 
               : 'bg-slate-200 text-slate-700'
-          } font-medium text-sm shadow-sm hover:bg-amber-500 transition`}
-          onClick={() => onChange('first-yellow')}
+          } font-medium text-sm shadow-sm hover:bg-primary-700 transition`}
+          onClick={() => onChange('acute')}
         >
-          First Yellow
+          Acute Angle
         </button>
         <button 
           className={`px-4 py-2 rounded-md ${
-            projectileType === 'second-yellow' 
-              ? 'bg-amber-400 text-white' 
+            angleSetting === 'obtuse' 
+              ? 'bg-primary-600 text-white' 
               : 'bg-slate-200 text-slate-700'
-          } font-medium text-sm shadow-sm hover:bg-amber-500 transition`}
-          onClick={() => onChange('second-yellow')}
+          } font-medium text-sm shadow-sm hover:bg-primary-700 transition`}
+          onClick={() => onChange('obtuse')}
         >
-          Second Yellow
+          Obtuse Angle
         </button>
-        <button 
-          className={`px-4 py-2 rounded-md ${
-            projectileType === 'custom' 
-              ? 'bg-amber-400 text-white' 
-              : 'bg-slate-200 text-slate-700'
-          } font-medium text-sm shadow-sm hover:bg-amber-500 transition`}
-          onClick={() => onChange('custom')}
-        >
-          Custom
-        </button>
+      </div>
+      <div className="mt-2 text-xs text-slate-500">
+        <p>Acute angle: Steeper launch angle, good for shorter distances. Based on experimental data using 12-15cm contraction.</p>
+        <p>Obtuse angle: Gentler launch angle, better for longer distances. Based on experimental data using 9.5-15cm contraction.</p>
       </div>
     </div>
   );
