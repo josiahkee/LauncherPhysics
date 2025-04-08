@@ -1,6 +1,17 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => {
+  res.send('Hello, world!');
+});
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
 
 const app = express();
 app.use(express.json());
