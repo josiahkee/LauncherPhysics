@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import AngleSettingSelector from "@/components/ProjectileSelector"; // Using the renamed component
-import TargetSelector from "@/components/TargetSelector";
+import AngleSettingSelector from "@/components/ProjectileSelector";
 import CustomTargetInput from "@/components/CustomTargetInput";
 import SpringProperties from "@/components/SpringProperties";
 import ResultDisplay from "@/components/ResultDisplay";
@@ -16,10 +15,8 @@ export default function Home() {
   
   // Basic states
   const [angleSetting, setAngleSetting] = useState<string>("acute");
-  const [targetType, setTargetType] = useState<string>("start-line");
   
-  // Custom target states
-  const [useCustomTarget, setUseCustomTarget] = useState<boolean>(false);
+  // Target states
   const [targetX, setTargetX] = useState<number>(100);
   const [targetY, setTargetY] = useState<number>(100);
   
@@ -78,10 +75,8 @@ export default function Home() {
     const input: CalculateInput = {
       angleSetting,
       launchAngle: defaultLaunchAngle,
-      ...(useCustomTarget 
-        ? { customTargetX: targetX, customTargetY: targetY } 
-        : { targetType }
-      ),
+      customTargetX: targetX,
+      customTargetY: targetY
     };
     
     calculateMutation.mutate(input);
@@ -92,29 +87,27 @@ export default function Home() {
     
     const calculation: InsertCalculation = {
       angleSetting,
-      targetType: useCustomTarget ? 'custom' : targetType,
+      targetType: 'custom',
       targetDistance: calculationResult.targetDistance,
       contractionDistance: calculationResult.contractionDistance,
-      launchAngle: angleSetting === 'acute' ? 65 : 35, // Default angle based on setting
-      ...(useCustomTarget && {
-        targetX,
-        targetY,
-      }),
+      launchAngle: angleSetting === 'acute' ? 65 : 35,
+      targetX,
+      targetY,
       timestamp: Date.now(),
     };
     
     saveMutation.mutate(calculation);
   };
   
-  // Use the first result as initial calculation (optional)
+  // Use the first result as initial calculation
   if (!calculationResult && !calculateMutation.isPending) {
     handleCalculate();
   }
   
   // Calculate estimated target distance for trajectory visualization
-  const estimatedTargetDistance = useCustomTarget
-    ? Math.sqrt(targetX * targetX + targetY * targetY) / 100
-    : calculationResult?.targetDistance || 1.0;
+  const distanceX = targetX + 100; // Add 100cm for launcher distance
+  const distanceY = Math.abs(targetY - 100); // Distance from center line
+  const estimatedTargetDistance = Math.sqrt(distanceX * distanceX + distanceY * distanceY) / 100;
   
   // Default launch angle based on setting - for visualization
   const defaultLaunchAngle = angleSetting === 'acute' ? 65 : 35;
@@ -134,23 +127,11 @@ export default function Home() {
               
               <AngleSettingSelector 
                 angleSetting={angleSetting}
-                onChange={(value) => {
-                  setAngleSetting(value);
-                  // Reset target type when angle setting changes
-                  setTargetType(value === 'acute' ? 'start-line' : 'front-line');
-                }}
-              />
-              
-              <TargetSelector 
-                angleSetting={angleSetting}
-                targetType={targetType}
-                onChange={setTargetType}
-                onCustomTarget={setUseCustomTarget}
-                useCustomTarget={useCustomTarget}
+                onChange={setAngleSetting}
               />
               
               <CustomTargetInput 
-                visible={useCustomTarget}
+                visible={true}
                 targetX={targetX}
                 targetY={targetY}
                 onChangeX={setTargetX}
