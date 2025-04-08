@@ -11,9 +11,9 @@ export default function AngleSettingSelector({ angleSetting, onChange }: AngleSe
         <button 
           className={`px-4 py-2 rounded-md ${
             angleSetting === 'acute' 
-              ? 'bg-primary-600 text-white' 
+              ? 'bg-blue-600 text-white' 
               : 'bg-slate-200 text-slate-700'
-          } font-medium text-sm shadow-sm hover:bg-primary-700 transition`}
+          } font-medium text-sm shadow-sm hover:bg-blue-700 transition`}
           onClick={() => onChange('acute')}
         >
           Acute Angle
@@ -21,9 +21,9 @@ export default function AngleSettingSelector({ angleSetting, onChange }: AngleSe
         <button 
           className={`px-4 py-2 rounded-md ${
             angleSetting === 'obtuse' 
-              ? 'bg-primary-600 text-white' 
+              ? 'bg-blue-600 text-white' 
               : 'bg-slate-200 text-slate-700'
-          } font-medium text-sm shadow-sm hover:bg-primary-700 transition`}
+          } font-medium text-sm shadow-sm hover:bg-blue-700 transition`}
           onClick={() => onChange('obtuse')}
         >
           Obtuse Angle
