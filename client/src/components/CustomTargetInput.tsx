@@ -67,7 +67,7 @@ export default function CustomTargetInput({
       </div>
       
       <div className="relative border border-slate-300 rounded-md overflow-hidden"
-        style={{ aspectRatio: "1/1", maxHeight: "300px" }}
+        style={{ aspectRatio: "1/1", maxHeight: "300px", marginLeft: "30px" }}
         onClick={handleCoordinateClick}
       >
         {/* Grid background */}
@@ -102,14 +102,23 @@ export default function CustomTargetInput({
           }}
         ></div>
         
-        {/* Launcher position marker - 100cm away from left side */}
-        <div 
-          className="absolute w-4 h-4 rounded-full bg-blue-500 transform -translate-x-1/2 -translate-y-1/2 shadow-md"
-          style={{ left: '-12%', top: '50%' }}
-        ></div>
-        <div className="absolute text-[10px] text-blue-600 font-medium" style={{ left: '-20%', top: '55%' }}>
-          Launcher
+        {/* Launcher position with arrow pointing to grid */}
+        <div className="absolute" style={{ left: '-30px', top: '50%', transform: 'translateY(-50%)' }}>
+          <div className="flex items-center">
+            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+              L
+            </div>
+            <div className="w-10 h-1 bg-blue-500"></div>
+            <div className="w-0 h-0 border-y-4 border-l-6 border-y-transparent border-l-blue-500"></div>
+          </div>
+          <div className="text-[10px] font-bold text-blue-700 w-20 text-center" style={{ marginLeft: '-7px', marginTop: '3px' }}>
+            LAUNCHER
+          </div>
         </div>
+      </div>
+      
+      <div className="mt-2 text-sm text-blue-800 font-semibold text-center">
+        Launcher is positioned to the LEFT of the grid, facing right
       </div>
       
       <div className="mt-2 text-xs text-slate-500 text-center">
