@@ -4,7 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import AngleSettingSelector from "@/components/ProjectileSelector";
 import CustomTargetInput from "@/components/CustomTargetInput";
-import SpringProperties from "@/components/SpringProperties";
+
 import ResultDisplay from "@/components/ResultDisplay";
 import SavedResults from "@/components/SavedResults";
 import TrajectoryVisualization from "@/components/TrajectoryVisualization";
@@ -137,8 +137,6 @@ export default function Home() {
                 onChangeX={setTargetX}
                 onChangeY={setTargetY}
               />
-              
-              <SpringProperties />
               
               <div className="mt-6">
                 <button 
