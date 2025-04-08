@@ -40,9 +40,8 @@ export type Calculation = typeof calculations.$inferSelect;
 // Input schema for calculating spring contraction
 export const calculateInputSchema = z.object({
   angleSetting: z.string(),
-  targetType: z.string().optional(),
-  customTargetX: z.number().min(0).max(200).optional(),
-  customTargetY: z.number().min(0).max(200).optional(),
+  customTargetX: z.number().min(0).max(200),
+  customTargetY: z.number().min(0).max(200),
   launchAngle: z.number().min(0).max(90),
 });
 
@@ -53,9 +52,9 @@ export const calculationResultSchema = z.object({
   contractionDistance: z.number(),
   targetDistance: z.number(),
   angleSetting: z.string(),
-  targetType: z.string().optional(),
-  targetX: z.number().optional(),
-  targetY: z.number().optional(),
+  targetType: z.string(),
+  targetX: z.number(),
+  targetY: z.number(),
 });
 
 export type CalculationResult = z.infer<typeof calculationResultSchema>;

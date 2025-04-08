@@ -37,94 +37,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const input = calculateInputSchema.parse(req.body);
       
-      // Pre-defined target configurations and contraction distances based on user's requirements
-      const contractionDistances: Record<string, Record<string, number>> = {
-        'acute': {
-          'start-line': 12.0,
-          'front-left-corner': 13.0,
-          'mid-line': 14.0,
-          'far-side': 15.0
-        },
-        'obtuse': {
-          'front-line': 9.5,
-          'back-line': 15.0,
-          'center': 14.0,
-          'side': 15.0
-        }
-      };
-
-      // Approximate coordinates for each target type in cm (on a 200x200 grid)
-      const targetCoordinates: Record<string, Record<string, [number, number]>> = {
-        'acute': {
-          'start-line': [0, 100],         // Front-center
-          'front-left-corner': [0, 0],    // Front-left corner
-          'mid-line': [100, 100],         // Middle of grid
-          'far-side': [100, 0]            // Mid-point on the left side
-        },
-        'obtuse': {
-          'front-line': [0, 100],         // Front-center
-          'back-line': [200, 100],        // Back-center
-          'center': [100, 100],           // Center of grid
-          'side': [100, 0]                // Mid-point on the left side
-        }
-      };
-
       let contractionDistance: number;
       let targetDistance: number;
-      let targetType = input.targetType || '';
+      const targetType = 'custom';
       let targetX: number | undefined;
       let targetY: number | undefined;
 
       if (input.customTargetX !== undefined && input.customTargetY !== undefined) {
-        // Calculate distance from launcher to the target point
-        // Launcher is 100cm away from the quadrant
-        const distanceX = input.customTargetX + 100; // Add 100cm for launcher distance
-        const distanceY = Math.abs(input.customTargetY - 100); // Distance from center line
-        
-        // Get the Euclidean distance and convert to meters
-        const euclideanDistance = Math.sqrt(distanceX * distanceX + distanceY * distanceY) / 100;
-        
         targetX = input.customTargetX;
         targetY = input.customTargetY;
-        targetDistance = euclideanDistance;
         
-        // Calculate contraction based on angle setting and position
+        // Calculate distance for display purposes
+        const distanceX = targetX;
+        const distanceY = Math.abs(targetY - 100);
+        targetDistance = Math.sqrt(distanceX * distanceX + distanceY * distanceY) / 100;
+        
         if (input.angleSetting === 'acute') {
-          // For acute angle setting:
-          // Base: 12cm for 0 distance
-          // +1cm per 100cm of X distance
-          // +0.5cm if at a side position
+          // Experimental values for acute angle (65°):
+          // - 12cm contraction for 0cm distance from start line
+          // - 13cm for front corners
+          // - 14cm for 100cm distance center
+          // - 15cm for 100cm at corners
           
-          contractionDistance = 12.0; // Base contraction
+          // Linear equation based on X position (depth)
+          contractionDistance = 12 + (targetX / 100) * 2;
           
-          if (distanceX > 0) {
-            // Add 1cm for each 100cm in X direction (depth)
-            contractionDistance += (distanceX / 100) * 1.0;
-          }
+          // Add adjustment for side positions (if far from center line)
+          const sideDistanceFactor = Math.min(Math.abs(targetY - 100) / 100, 1.0);
+          contractionDistance += sideDistanceFactor;
           
-          // If closer to edges, add additional contraction
-          if (distanceY < 50 || distanceY > 150) {
-            contractionDistance += 0.5;
-          }
-          
-          // Cap at max distance
+          // Cap at max contraction
           contractionDistance = Math.min(contractionDistance, 15.0);
         } else {
-          // For obtuse angle setting:
-          // Base: 9.5cm for front position
-          // +5.5cm for full 200cm in X direction
-          // +1cm if at a side position
+          // Experimental values for obtuse angle (35°):
+          // - 9.5cm for front line
+          // - 15cm for back line (200cm)
+          // - Add 1cm when at sides
           
-          contractionDistance = 9.5; // Base contraction
+          // Linear equation for depth
+          contractionDistance = 9.5 + (targetX / 200) * 5.5;
           
-          if (distanceX > 0) {
-            // Linear scale between 9.5 and 15cm based on X distance
-            const depthFactor = distanceX / 200;
-            contractionDistance += depthFactor * 5.5;
-          }
-          
-          // If closer to sides, add additional contraction
-          if (distanceY < 50 || distanceY > 150) {
+          // Add adjustment for side positions
+          if (Math.abs(targetY - 100) > 75) {
             contractionDistance += 1.0;
           }
         }
@@ -132,21 +86,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Round to 1 decimal place
         contractionDistance = Math.round(contractionDistance * 10) / 10;
       } else {
-        // Use predefined values when not using coordinates
-        contractionDistance = contractionDistances[input.angleSetting]?.[targetType] || 0;
-        
-        // Set target coordinates if available
-        const coordinates = targetCoordinates[input.angleSetting]?.[targetType];
-        if (coordinates) {
-          [targetX, targetY] = coordinates;
-          
-          // Calculate distance for display purposes
-          const distanceX = targetX + 100; // Add 100cm for launcher distance
-          const distanceY = Math.abs(targetY - 100); // Distance from center line
-          targetDistance = Math.sqrt(distanceX * distanceX + distanceY * distanceY) / 100; // Convert to meters
-        } else {
-          targetDistance = 0;
-        }
+        contractionDistance = 0;
+        targetDistance = 0;
       }
 
       res.json({

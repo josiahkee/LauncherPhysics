@@ -142,7 +142,7 @@ export default function Home() {
               
               <div className="mt-6">
                 <button 
-                  className="w-full py-3 px-6 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-md shadow-md transition flex items-center justify-center space-x-2"
+                  className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md shadow-md transition flex items-center justify-center space-x-2"
                   onClick={handleCalculate}
                   disabled={calculateMutation.isPending}
                 >
@@ -172,7 +172,7 @@ export default function Home() {
               />
               
               <button 
-                className="mt-4 w-full py-2 px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium rounded-md shadow-sm transition"
+                className="mt-4 w-full py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md shadow-sm transition"
                 onClick={handleSaveCalculation}
                 disabled={!calculationResult || saveMutation.isPending}
               >

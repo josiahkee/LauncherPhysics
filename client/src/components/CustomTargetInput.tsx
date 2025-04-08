@@ -7,15 +7,11 @@ interface CustomTargetInputProps {
 }
 
 export default function CustomTargetInput({ 
-  visible, 
   targetX, 
   targetY, 
   onChangeX, 
   onChangeY 
 }: CustomTargetInputProps) {
-  if (!visible) {
-    return null;
-  }
   
   const handleCoordinateClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const gridElement = e.currentTarget;
@@ -32,7 +28,7 @@ export default function CustomTargetInput({
   return (
     <div className="mb-6">
       <label className="block text-sm font-medium text-slate-700 mb-2">
-        Custom Target Position
+        Target Position (200x200 cm grid)
       </label>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
@@ -92,21 +88,21 @@ export default function CustomTargetInput({
         </div>
         
         {/* Coordinate labels */}
-        <div className="absolute top-0 left-0 p-1 text-[10px] text-slate-500">0,0</div>
-        <div className="absolute top-0 right-0 p-1 text-[10px] text-slate-500">0,200</div>
-        <div className="absolute bottom-0 left-0 p-1 text-[10px] text-slate-500">200,0</div>
-        <div className="absolute bottom-0 right-0 p-1 text-[10px] text-slate-500">200,200</div>
+        <div className="absolute top-0 left-0 p-1 text-[10px] text-slate-500">0cm</div>
+        <div className="absolute top-0 right-0 p-1 text-[10px] text-slate-500">200cm</div>
+        <div className="absolute bottom-0 left-0 p-1 text-[10px] text-slate-500">0cm</div>
+        <div className="absolute bottom-0 right-0 p-1 text-[10px] text-slate-500">200cm</div>
         
         {/* Target marker */}
         <div 
-          className="absolute w-4 h-4 rounded-full bg-red-500 transform -translate-x-1/2 -translate-y-1/2 shadow-md"
+          className="absolute w-4 h-4 rounded-full bg-red-500 transform -translate-x-1/2 -translate-y-1/2 shadow-md z-10"
           style={{ 
             left: `${(targetX / 200) * 100}%`, 
             top: `${(targetY / 200) * 100}%`,
           }}
         ></div>
         
-        {/* Launcher position marker - 100cm away from quadrant */}
+        {/* Launcher position marker - 100cm away from left side */}
         <div 
           className="absolute w-4 h-4 rounded-full bg-blue-500 transform -translate-x-1/2 -translate-y-1/2 shadow-md"
           style={{ left: '-12%', top: '50%' }}
